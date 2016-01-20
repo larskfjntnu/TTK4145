@@ -7,27 +7,36 @@ import (
 	"time"
 )
 
-var i int = 0
+var i int := 0
 
-func thread_1() {
+func thread_1(messageChannel chan int) {
+	tempi := <-messageChannel
 	for counter := 0; counter < 1000000; counter++ {
-		i++
-
+		tempi++
 	}
+	messageChannel<-tempi
 }
 
-func thread_2() {
+func thread_2(messageChannel chan int) {
+	tempi := <-messageChannel
 	for counter := 0; counter < 1000000; counter++ {
-		i--
+		tempi++
 	}
+	messageChannel<-tempi
 }
 
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go thread_1()
-	go thread_2()
+	
+	channel := make(chan int, 1);
+	channel <- i;
+	
+	go thread_1(channel)
+	go thread_2(channel)
 	time.Sleep(1000 * time.Millisecond)
+	
+	i := <-channel
 
 	fmt.Println(i)
 	/* The scheduler suspends and starts the threads at random,
